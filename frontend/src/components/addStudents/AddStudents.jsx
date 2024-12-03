@@ -1,40 +1,130 @@
 import { useState } from "react";
 import api from "../../api/axios.js";
+import { toast } from "react-toastify";
+import StudentForm from "../studentsForm/StudentsForm.jsx";
+import FileUploadForm from "../fileUploadForm/FileUploadForm.jsx";
 
-const AddStudents = () => {
-    const [formData, setFormData] = useState({
-        nombre: "",
-        apellido: "",
-        dni: "",
-        email: "",
+const AddStudents = ({ setAlumnos }) => {
+  const [formData, setFormData] = useState({
+    nombre: "",
+    apellido: "",
+    dni: "",
+    email: "",
+  });
+  const [file, setFile] = useState(null);
+  const [previewData, setPreviewData] = useState([]);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
     });
+  };
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const alumno = await api.post("/alumnos", formData);
+      const nuevoAlumno = {
+        nombre: alumno.data.nombre,
+        apellido: alumno.data.apellido,
+        dni: alumno.data.dni,
+        email: alumno.data.email,
+      };
+      setAlumnos((prev) => [...prev, nuevoAlumno]);
+      toast.success("Alumno agregado con éxito");
+    } catch (error) {
+      toast.error("Error al agregar el alumno");
+    }
+    setFormData({
+      nombre: "",
+      apellido: "",
+      dni: "",
+      email: "",
+    });
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await api.post("/alumnos", formData);
-            alert("Alumno agregado con éxito");
-        } catch (error) {
-            alert("Error al agregar el alumno", error);
-        }
-    };
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <input name="nombre" placeholder="Nombre" onChange={handleChange} />
-            <input name="apellido" placeholder="Apellido" onChange={handleChange} />
-            <input name="dni" placeholder="DNI" onChange={handleChange} />
-            <input name="email" placeholder="Email" onChange={handleChange} />
-            <button type="submit">Agregar Alumno</button>
-        </form>
-    );
+  const handlePreview = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      toast.error("Por favor, selecciona un archivo.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await api.post("/upload-excel-preview", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setPreviewData(response.data);
+      toast.success("Archivo cargado correctamente para previsualización");
+    } catch (error) {
+      toast.error("Error al procesar el archivo");
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      toast.error("Por favor, selecciona un archivo.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await api.post("/upload-excel", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.added === 0) {
+        toast.error(response.data.message);
+        return;
+      }
+
+      toast.success(response.data.message);
+    } catch (error) {
+      toast.error("Error al procesar el archivo");
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center py-8 px-4 bg-gray-100">
+      <div className="mb-6 text-center">
+        <h2 className="text-2xl font-bold text-gray-800">
+          Ingrese los datos de los alumnos a través del formulario o suba un
+          archivo Excel
+        </h2>
+      </div>
+
+      <div className="w-full max-w-5xl grid grid-cols-6 gap-4">
+        <StudentForm
+          formData={formData}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+        />
+        <FileUploadForm
+          file={file}
+          handleFileChange={handleFileChange}
+          handlePreview={handlePreview}
+          handleUpload={handleUpload}
+          previewData={previewData}
+        />
+      </div>
+    </div>
+  );
 };
 
 export default AddStudents;

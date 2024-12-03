@@ -29,3 +29,6 @@ Route::get('/certificado/{id}', function ($id) {
     return $pdf->download("Certificado_{$alumno->dni}.pdf");
 });
 
+Route::post('/upload-excel', [StudentController::class, 'uploadExcel']);
+Route::post('/upload-excel-preview', [StudentController::class, 'uploadExcelPreview']);
+
