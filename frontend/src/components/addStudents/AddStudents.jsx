@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import api from "../../api/axios.js";
 import { toast } from "react-toastify";
 import StudentForm from "../studentsForm/StudentsForm.jsx";
 import FileUploadForm from "../fileUploadForm/FileUploadForm.jsx";
+import { AuthContext } from "../../context/AuthContext.jsx";
 
 const AddStudents = ({ setAlumnos }) => {
+  const { token } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
     dni: "",
-    email: "",
+    ...(token ? { email: "" } : {}),
   });
   const [file, setFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
@@ -24,15 +26,20 @@ const AddStudents = ({ setAlumnos }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const alumno = await api.post("/alumnos", formData);
-      const nuevoAlumno = {
-        nombre: alumno.data.nombre,
-        apellido: alumno.data.apellido,
-        dni: alumno.data.dni,
-        email: alumno.data.email,
-      };
-      setAlumnos((prev) => [...prev, nuevoAlumno]);
-      toast.success("Alumno agregado con éxito");
+      if (token) {
+        const alumno = await api.post("/alumnos", formData);
+        const nuevoAlumno = {
+          nombre: alumno.data.nombre,
+          apellido: alumno.data.apellido,
+          dni: alumno.data.dni,
+          email: alumno.data.email,
+        };
+        setAlumnos((prev) => [...prev, nuevoAlumno]);
+        toast.success("Alumno agregado con éxito");
+      } else {
+        alert("Descargar PDF");
+        toast.success("PDF descargado con éxito");
+      }
     } catch (error) {
       toast.error("Error al agregar el alumno");
     }
@@ -40,7 +47,7 @@ const AddStudents = ({ setAlumnos }) => {
       nombre: "",
       apellido: "",
       dni: "",
-      email: "",
+      ...(token ? { email: "" } : {})
     });
   };
 
@@ -101,7 +108,7 @@ const AddStudents = ({ setAlumnos }) => {
   };
 
   return (
-    <div className="flex flex-col items-center py-8 px-4 bg-gray-100">
+    <div className="flex flex-col items-center pt-4 pb-10 px-4">
       <div className="mb-6 text-center">
         <h2 className="text-2xl font-bold text-gray-800">
           Ingrese los datos de los alumnos a través del formulario o suba un
@@ -114,6 +121,7 @@ const AddStudents = ({ setAlumnos }) => {
           formData={formData}
           handleChange={handleChange}
           handleSubmit={handleSubmit}
+          token={token}
         />
         <FileUploadForm
           file={file}

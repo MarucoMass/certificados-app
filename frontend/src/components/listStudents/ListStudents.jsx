@@ -1,79 +1,95 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import api from "../../api/axios.js";
 import { toast } from "react-toastify";
+import { AuthContext } from "../../context/AuthContext.jsx";
+// import { jsPDF } from "jspdf";
 
 
-const ListStudents = ({alumnos, setAlumnos}) => {
-    // const [alumnos, setAlumnos] = useState([]);
-    const [editIndex, setEditIndex] = useState(null); 
+const ListStudents = ({ alumnos, setAlumnos }) => {
+  // const [alumnos, setAlumnos] = useState([]);
+  const { token } = useContext(AuthContext);
+  const [editIndex, setEditIndex] = useState(null);
 
-    useEffect(() => {
-        const fetchAlumnos = async () => {
-            const response = await api.get("/alumnos");
-            setAlumnos(response.data);
-        };
-
-        fetchAlumnos();
-    }, []);
-
-    const toggleDropdown = (index) => {
-        setEditIndex(editIndex === index ? null : index);
+  useEffect(() => {
+    const fetchAlumnos = async () => {
+      const response = await api.get("/alumnos");
+      setAlumnos(response.data);
     };
 
-    const handleEditChange = (e, index) => {
-        const { name, value } = e.target;
-        const updatedAlumnos = [...alumnos];
-        updatedAlumnos[index] = { ...updatedAlumnos[index], [name]: value };
-        setAlumnos(updatedAlumnos);
-    };
+    fetchAlumnos();
+  }, []);
 
-    const saveChanges = async (id, index) => {
-        try {
-            const updatedAlumno = alumnos[index];
-            console.log(updatedAlumno)
-            await api.put(`/alumnos/${id}`, updatedAlumno);
-            setEditIndex(null);
-            toast.success("Datos del alumno actualizados con éxito.")
-        } catch (error) {
-            console.error("Error al actualizar los datos", error);
-            toast.error("Hubo un problema al actualizar los datos.");
+  const toggleDropdown = (index) => {
+    setEditIndex(editIndex === index ? null : index);
+  };
+
+  const handleEditChange = (e, index) => {
+    const { name, value } = e.target;
+    const updatedAlumnos = [...alumnos];
+    updatedAlumnos[index] = { ...updatedAlumnos[index], [name]: value };
+    setAlumnos(updatedAlumnos);
+  };
+
+  const saveChanges = async (alumno, index) => {
+    try {
+      const updatedAlumno = alumnos[index];
+      console.log(updatedAlumno);
+      await api.put(`/alumnos/${alumno.id}`, updatedAlumno);
+      setEditIndex(null);
+      toast.success("Datos del alumno actualizados con éxito.");
+    } catch (error) {
+      console.error("Error al actualizar los datos", error);
+      toast.error("Hubo un problema al actualizar los datos.");
+    }
+  };
+
+  const printPDF = async (alumno) => {
+      try {
+        if(token)
+        {
+          const response = await api.get(`/certificado/${alumno.id}`, {
+            responseType: "blob",
+          });
+  
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute(
+            "download",
+            `Certificado_${alumno.nombre}_${alumno.apellido}.pdf`
+          );
+          document.body.appendChild(link);
+          link.click();
+          link.parentNode.removeChild(link);
+        } else {
+          alert("no esta logueado")
         }
-    };
+      } catch (error) {
+        console.error("Error al descargar el PDF", error);
+      }
+  };
 
-    const printPDF = async (alumno) => {
-        try {
-            const response = await api.get(`/certificado/${alumno.id}`, {
-                responseType: "blob",
-            });
+  const handleDelete = async (alumno) => {
+    try {
+      if (token) {
+        const response = await api.delete(`/alumnos/${alumno.id}`);
+        toast.success(response.data.message);
+      }
+      setAlumnos(alumnos.filter((a) => a.id !== alumno.id));
+      toast.success("Alumno eliminado");
+    } catch (error) {
+      toast.error("Error al eliminar el alumno", error);
+    }
+  };
 
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", `Certificado_${alumno.nombre + " " + alumno.apellido}.pdf`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode.removeChild(link);
-        } catch (error) {
-            console.error("Error al descargar el PDF", error);
-        }
-    };
+  return (
+    <div className="p-4 bg-white">
 
-   const handleDelete = async (alumno) => {
-     try {
-       const response = await api.delete(`/alumnos/${alumno.id}`);
-       toast.success(response.data.message);
-       setAlumnos(alumnos.filter((a) => a.id !== alumno.id));
-     } catch (error) {
-       toast.error("Error al eliminar el alumno", error);
-     }
-   };
+      <h1 className="text-2xl font-bold text-blue-600 mb-4">
+        Lista de Alumnos
+      </h1>
 
-
-    return (
-      <div className="p-4">
-        <h1 className="text-2xl font-bold text-blue-600 mb-4">
-          Lista de Alumnos
-        </h1>
+      {alumnos.length > 0 ? (
         <ul className="space-y-4">
           {alumnos.map((alumno, index) => (
             <li key={`${alumno.id}-${index}`} className="border p-4 rounded-lg">
@@ -136,7 +152,7 @@ const ListStudents = ({alumnos, setAlumnos}) => {
                     <button
                       type="button"
                       className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                      onClick={() => saveChanges(alumno.id, index)}
+                      onClick={() => saveChanges(alumno, index)}
                     >
                       Guardar Cambios
                     </button>
@@ -146,8 +162,11 @@ const ListStudents = ({alumnos, setAlumnos}) => {
             </li>
           ))}
         </ul>
-      </div>
-    );
+      ) : (
+        <p>No hay alumnos</p>
+      )}
+    </div>
+  );
 };
 
 export default ListStudents;
