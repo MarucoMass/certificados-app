@@ -7,7 +7,7 @@ export const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [user, setUser] = useState(null);
-
+  const [alumnos, setAlumnos] = useState([]);
   async function getUser() {
     try {
       const res = await api.get("/user", {
@@ -30,7 +30,7 @@ const AuthProvider = ({ children }) => {
   }, [token]);
 
   return (
-    <AuthContext.Provider value={{ token, setToken, user, setUser }}>
+    <AuthContext.Provider value={{ token, setToken, user, setUser, alumnos, setAlumnos }}>
       {children}
     </AuthContext.Provider>
   );

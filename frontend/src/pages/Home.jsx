@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import AddStudents from "../components/addStudents/AddStudents";
 import ListStudents from "../components/listStudents/ListStudents";
+import { AuthContext } from "../context/AuthContext";
 
 const Home = () => {
-  const [alumnos, setAlumnos] = useState([]);
+  // const [alumnos, setAlumnos] = useState([]);
+  // const {alumnos, setAlumnos} = useContext(AuthContext);
   return (
     <div>
-      <AddStudents setAlumnos={setAlumnos} />
-      <ListStudents alumnos={alumnos} setAlumnos={setAlumnos} />
+      <AddStudents  />
+      <ListStudents />
     </div>
   );
 };

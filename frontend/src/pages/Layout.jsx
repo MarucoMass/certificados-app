@@ -6,7 +6,7 @@ import api from "../api/axios";
 
 const Layout = () => {
   const navigate = useNavigate();
-  const { user, setUser, token, setToken } = useContext(AuthContext);
+  const { user, setUser, token, setToken, setAlumnos } = useContext(AuthContext);
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -19,6 +19,7 @@ const Layout = () => {
     if (res.status === 200) {
       setUser(null);
       setToken(null);
+      setAlumnos([])
       localStorage.removeItem("token");
       navigate("/");
     }

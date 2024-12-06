@@ -4,19 +4,20 @@ import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext.jsx";
 // import { jsPDF } from "jspdf";
 
-
-const ListStudents = ({ alumnos, setAlumnos }) => {
+const ListStudents = () => {
   // const [alumnos, setAlumnos] = useState([]);
-  const { token } = useContext(AuthContext);
+  const { token, alumnos, setAlumnos } = useContext(AuthContext);
   const [editIndex, setEditIndex] = useState(null);
 
   useEffect(() => {
-    const fetchAlumnos = async () => {
-      const response = await api.get("/alumnos");
-      setAlumnos(response.data);
-    };
+    if (token) {
+      const fetchAlumnos = async () => {
+        const response = await api.get("/alumnos");
+        setAlumnos(response.data);
+      };
+      fetchAlumnos();
+    }
 
-    fetchAlumnos();
   }, []);
 
   const toggleDropdown = (index) => {
@@ -44,29 +45,28 @@ const ListStudents = ({ alumnos, setAlumnos }) => {
   };
 
   const printPDF = async (alumno) => {
-      try {
-        if(token)
-        {
-          const response = await api.get(`/certificado/${alumno.id}`, {
-            responseType: "blob",
-          });
-  
-          const url = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement("a");
-          link.href = url;
-          link.setAttribute(
-            "download",
-            `Certificado_${alumno.nombre}_${alumno.apellido}.pdf`
-          );
-          document.body.appendChild(link);
-          link.click();
-          link.parentNode.removeChild(link);
-        } else {
-          alert("no esta logueado")
-        }
-      } catch (error) {
-        console.error("Error al descargar el PDF", error);
+    try {
+      if (token) {
+        const response = await api.get(`/certificado/${alumno.id}`, {
+          responseType: "blob",
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute(
+          "download",
+          `Certificado_${alumno.nombre}_${alumno.apellido}.pdf`
+        );
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+      } else {
+        alert("no esta logueado");
       }
+    } catch (error) {
+      console.error("Error al descargar el PDF", error);
+    }
   };
 
   const handleDelete = async (alumno) => {
@@ -84,7 +84,6 @@ const ListStudents = ({ alumnos, setAlumnos }) => {
 
   return (
     <div className="p-4 bg-white">
-
       <h1 className="text-2xl font-bold text-blue-600 mb-4">
         Lista de Alumnos
       </h1>
