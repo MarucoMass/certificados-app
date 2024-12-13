@@ -96,6 +96,7 @@ const AddStudents = () => {
     doc.setFont("Helvetica", "normal");
     doc.setFontSize(10);
     doc.text("Junior Achievement Santa Fe", 120, 180);
+    doc.text("Junior Achievement Santa Fe", 30, 180);
   
     // Descargar el PDF
     doc.save(`certificado_${formData.nombre}_${formData.apellido}.pdf`);
