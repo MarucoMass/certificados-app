@@ -12,4 +12,9 @@ class Student extends Model
         "dni",
         "email"
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
