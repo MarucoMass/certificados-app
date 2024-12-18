@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,4 +26,12 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware('restrictRole:admin');
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    // Ruta para registrar estudiantes (solo accesible por administradores)
+    Route::post('/students', [StudentController::class, 'store']);
+
+    Route::put('/students/{student}', [StudentController::class, 'update']);
+    
+    Route::delete('/students/{student}', [StudentController::class, 'destroy']);
 });
+
