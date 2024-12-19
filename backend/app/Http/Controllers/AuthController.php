@@ -42,7 +42,7 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($fields['password'], $user->password)) {
             return response([
-                'message' => 'Wrong credentials'
+                'message' => 'Credenciales incorrectas'
             ]);
         }
 
@@ -51,7 +51,16 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'Type' => 'Bearer',
-            'role' => $user->role // include user role in response
+            'role' => $user->role 
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return [
+            'message' => 'Has cerrado la sesión'
+        ];
     }
 }
